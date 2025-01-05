@@ -509,7 +509,7 @@ def style_transform(style_paths: list[str], content_path: str, save_dir="../data
     # 设置参数
     parameter_list = {
         "device": device,
-        "epoches": 500,
+        "epoches": 2000,
         "lr": 1e-3,
         "content_weight": 1e-2,  # origin: 1e-2
         "style_weight": 1e7,  # origin: 1e7
@@ -564,5 +564,5 @@ def style_transform(style_paths: list[str], content_path: str, save_dir="../data
 if __name__ == "__main__":
     style_transform(
         style_paths=["../data/paper/style/Picasso/guernica.jpg", "../data/paper/style/Tsunami.jpg"],
-        content_path="../data/paper/content/chicago_0.jpg",
+        content_path="../data/content/chicago_lake_skyline.jpg",
     )

@@ -18,7 +18,7 @@
 1. Clone this repository:
 
    ```bash
-   https://github.com/Charles-T-T/M2O_StyleTransfer.git
+   git clone https://github.com/Charles-T-T/M2O_StyleTransfer.git
    ```
 
 2. Create and activate the Conda environment:
@@ -35,7 +35,7 @@
    python M2O_StyleTransfer.py
    ```
 
-   You can choose your own style images and content images by adding arguments: 
+   You can choose your own style images and content images by adding arguments like this: 
 
    ```bash
    python M2O_StyleTransfer.py --style_paths path/to/style1 path/to/style2 --content_path path/to/content

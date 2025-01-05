@@ -1,5 +1,8 @@
 <div align="center">
 <h1>Multi-to-One Style Transfer: Region-Based Styles Assignment for Single Content Image</h1>
+**Chenjun Bai · Haotian Fan**
+</div>
+
 
 > :hammer_and_wrench: in development
 

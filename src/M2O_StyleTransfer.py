@@ -461,29 +461,29 @@ def resize_to_nearest_power_of_two(image, max_dim=1024):
     h, w = image.shape[:2]
 
     # 计算宽和高调整后的目标值
-    def largest_power_of_two_less_than_or_equal_to(x, limit):
+    def get_target_length(x, limit):
         return min(2 ** int(np.floor(np.log2(x))), limit)
 
-    new_h = largest_power_of_two_less_than_or_equal_to(h, max_dim)
-    new_w = largest_power_of_two_less_than_or_equal_to(w, max_dim)
+    new_h = get_target_length(h, max_dim)
+    new_w = get_target_length(w, max_dim)
 
     # 调整图像大小
     return cv2.resize(image, (new_w, new_h))
 
 
-def style_transform(style_paths: list[str], target_path: str, save_path="result.png"):
+def style_transform(style_paths: list[str], content_path: str, save_dir="../data/paper/result"):
     """将若干张图片风格迁移到一张图上
     
     Args:
         style_paths (list[str]): 若干风格图片的路径
         target_path (str): 要迁移到的目标图片
-        save_path (str): 生成的图片路径 Default to "result.png"
+        save_path (str): 生成的图片路径. Default to "result.png"
     """
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     # 加载内容图像
-    content_img = cv2.imread(target_path)
+    content_img = cv2.imread(content_path)
     original_height, original_width = content_img.shape[:2]  # FHT: 保存原始尺寸
     print(f"\norigin: {content_img.shape}\n")
     # content_img = cv2.resize(content_img, (512, 512))
@@ -509,7 +509,7 @@ def style_transform(style_paths: list[str], target_path: str, save_path="result.
     # 设置参数
     parameter_list = {
         "device": device,
-        "epoches": 1000,
+        "epoches": 500,
         "lr": 1e-3,
         "content_weight": 1e-2,  # origin: 1e-2
         "style_weight": 1e7,  # origin: 1e7
@@ -519,7 +519,6 @@ def style_transform(style_paths: list[str], target_path: str, save_path="result.
     }
 
     # 初始化网络
-    # net = transformer(models.vgg19(pretrained=True).features.eval()).to(device)
     net = transformer(models.vgg19(weights=models.VGG19_Weights.DEFAULT).features.eval()).to(device)
 
     # 使用 DataParallel 包裹模型
@@ -545,75 +544,25 @@ def style_transform(style_paths: list[str], target_path: str, save_path="result.
         align_corners=False,
     )
 
-    save_image(result, save_path)
+    # 格式化输出图像名称为：{content}({style1, style2, ..., styleN}).png
+    content_name = os.path.splitext(os.path.basename(content_path))[0]
+    style_names = [
+        os.path.splitext(os.path.basename(style_path))[0] for style_path in style_paths
+    ]
+    style_part = ", ".join(style_names)
+    result_name = f"{content_name}({style_part}).png"
 
-# def style_transform(style_paths: list[str], target_path: str, save_path="result.png"):
-#     """将若干张图片风格迁移到一张图上
+    # 如果提供了输出文件夹，添加到图像输出路径中
+    if os.path.isdir(save_dir):
+        result_name = os.path.join(save_dir, result_name)
 
-#     Args:
-#         style_paths (list[str]): 若干风格图片的路径
-#         target_path (str): 要迁移到的目标图片
-#         save_path (str): 生成的图片路径 Default to "result.png"
-#     """
-
-#     # 1. 设置分布式训练环境
-#     dist.init_process_group(backend="nccl", init_method="env://", world_size=2, rank=int(os.environ['RANK']))
-#     device = torch.device(f"cuda:{dist.get_rank()}" if torch.cuda.is_available() else "cpu")
-
-#     # 2. 加载内容图像
-#     content_img = cv2.imread(target_path)
-#     content_img = cv2.resize(content_img, (512, 512))
-#     content_tensor = preprocess_image(content_img).to(device)
-
-#     # 3. 加载多个风格图像
-#     style_tensors = []
-#     for style_path in style_paths:
-#         style_img = cv2.imread(style_path)
-#         style_img = cv2.resize(style_img, (512, 512))
-#         style_tensors.append(preprocess_image(style_img).to(device))
-
-#     # 设置参数
-#     parameter_list = {
-#         "device": device,
-#         "epoches": 2000,
-#         "lr": 1e-3,
-#         "content_weight": 1e-2,
-#         "style_weight": 1e7,
-#         "tv_weight": 1e-3,
-#         "content_list": [25],
-#         "style_list": [0, 5, 10, 19, 28]
-#     }
-
-#     # 4. 初始化网络
-#     net = transformer(models.vgg19(pretrained=True).features.eval()).to(device)
-
-#     # 5. 使用 DistributedDataParallel 包裹模型
-#     net = nn.parallel.DistributedDataParallel(net, device_ids=[dist.get_rank()], output_device=dist.get_rank())
-
-#     # 6. 获取内容特征
-#     content_features, _ = net(content_tensor, parameter_list["content_list"], parameter_list["style_list"])
-
-#     # 7. 获取多个风格的 Gram 矩阵
-#     style_grams = []
-#     for style_tensor in style_tensors:
-#         _, style_gram = net(style_tensor, parameter_list["content_list"], parameter_list["style_list"])
-#         style_grams.append(style_gram)
-
-#     x = content_tensor.clone()
-
-#     # 8. 使用 train 函数进行训练
-#     result = train(x, net, parameter_list, content_features, style_grams)
-
-#     # 9. 保存最终结果
-#     if dist.get_rank() == 0:  # 只让主进程保存图片
-#         save_image(result, save_path)
-
-#     # 10. 清理分布式训练环境
-#     dist.destroy_process_group()
+    # 保存图像
+    save_image(result, result_name)
+    print(f"Output image has been saved to {result_name}")
 
 
 if __name__ == "__main__":
     style_transform(
-        style_paths=["../data/Monet/sunrise.png", "../data/style/style6.png", "../data/VanGogh/starry.jpg"],
-        target_path="../data/content/roadview.jpg",
+        style_paths=["../data/paper/style/Picasso/guernica.jpg", "../data/paper/style/Tsunami.jpg"],
+        content_path="../data/paper/content/chicago_0.jpg",
     )

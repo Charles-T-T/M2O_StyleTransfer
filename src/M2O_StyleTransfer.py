@@ -1,3 +1,4 @@
+import argparse
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -471,13 +472,14 @@ def resize_to_nearest_power_of_two(image, max_dim=1024):
     return cv2.resize(image, (new_w, new_h))
 
 
-def style_transform(style_paths: list[str], content_path: str, save_dir="../data/paper/result"):
-    """将若干张图片风格迁移到一张图上
-    
+def style_transform(style_paths: list[str], content_path: str, save_dir="../data/paper/result", n_epoch=1000):
+    """将若干张图片的风格迁移到一张图上
+
     Args:
         style_paths (list[str]): 若干风格图片的路径
         target_path (str): 要迁移到的目标图片
-        save_path (str): 生成的图片路径. Default to "result.png"
+        save_path (str): 生成的图片保存到的文件夹. Default to "../data/paper/result"
+        n_epoch (int): 训练轮数. Default to 1000.
     """
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -495,8 +497,6 @@ def style_transform(style_paths: list[str], content_path: str, save_dir="../data
     style_tensors = []
     for style_path in style_paths:
         style_img = cv2.imread(style_path)
-        # # 确保所有图像大小一致
-        # style_img = cv2.resize(style_img, (512, 512))
 
         # modified by FHT
         # 根据目标图像的大小调整风格图像的大小
@@ -509,7 +509,7 @@ def style_transform(style_paths: list[str], content_path: str, save_dir="../data
     # 设置参数
     parameter_list = {
         "device": device,
-        "epoches": 2000,
+        "epoches": n_epoch,
         "lr": 1e-3,
         "content_weight": 1e-2,  # origin: 1e-2
         "style_weight": 1e7,  # origin: 1e7
@@ -562,7 +562,40 @@ def style_transform(style_paths: list[str], content_path: str, save_dir="../data
 
 
 if __name__ == "__main__":
+    # 定义参数解析器
+    parser = argparse.ArgumentParser(description="Multi-to-One Style Transfer")
+
+    # 添加参数
+    parser.add_argument(
+        "--style_paths",
+        nargs="+",
+        default=[
+            "../data/paper/style/Picasso/guernica.jpg",
+            "../data/paper/style/Tsunami.jpg",
+        ],
+        help="Paths to style images (provide multiple paths separated by space)",
+    )
+    parser.add_argument(
+        "--content_path",
+        default="../data/content/chicago_lake_skyline.jpg",
+        help="Path to the content image",
+    )
+    parser.add_argument(
+        "--save_dir",
+        default="../data/paper/result",
+        help="Directory to save the result image",
+    )
+    parser.add_argument(
+        "--n_epoch", type=int, default=1000, help="Number of training epochs, default to 1000"
+    )
+
+    # 解析参数
+    args = parser.parse_args()
+
+    # 调用主函数
     style_transform(
-        style_paths=["../data/paper/style/Picasso/guernica.jpg", "../data/paper/style/Tsunami.jpg"],
-        content_path="../data/content/chicago_lake_skyline.jpg",
+        style_paths=args.style_paths,
+        content_path=args.content_path,
+        save_dir=args.save_dir,
+        n_epoch=args.n_epoch,
     )

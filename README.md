@@ -1,6 +1,7 @@
 <div align="center">
 <h1>Multi-to-One Style Transfer: Region-Based Styles Assignment for Single Content Image</h1>
 </div>
+
 ## Introduction
 
 **Multi-to-One Style Transfer** is a novel style transfer method, aiming to assemble various styles like puzzle pieces to construct a stylized image :art: 

@@ -1,9 +1,6 @@
 <div align="center">
 <h1>Multi-to-One Style Transfer: Region-Based Styles Assignment for Single Content Image</h1>
 </div>
-
-> :hammer_and_wrench: in development
-
 ## Introduction
 
 **Multi-to-One Style Transfer** is a novel style transfer method, aiming to assemble various styles like puzzle pieces to construct a stylized image :art: 
@@ -28,23 +25,22 @@
    conda activate StyleTransfer
    ```
 
-3. Run the `M2O_StyleTransfer.py` :
+3. Run the `M2O_ST.py` :
 
    ```bash
-   cd src
-   python M2O_StyleTransfer.py
+   python M2O_ST.py
    ```
-
+   
    You can choose your own style images and content images by adding arguments like this: 
-
+   
    ```bash
-   python M2O_StyleTransfer.py --style_paths path/to/style1 path/to/style2 --content_path path/to/content
+   python M2O_ST.py --style_paths path/to/style1 path/to/style2 --content_path path/to/content
    ```
-
-   Run `python M2O_StyleTransfer.py --help` to see all arguments:
-
+   
+   Run `python M2O_ST.py --help` to see all arguments:
+   
    ```bash
-   usage: M2O_StyleTransfer.py [-h] [--style_paths STYLE_PATHS [STYLE_PATHS ...]] [--content_path CONTENT_PATH] [--save_dir SAVE_DIR] [--n_epoch N_EPOCH]
+   usage: M2O_ST.py [-h] [--style_paths STYLE_PATHS [STYLE_PATHS ...]] [--content_path CONTENT_PATH] [--save_dir SAVE_DIR] [--n_epoch N_EPOCH]
    
    Multi-to-One Style Transfer
    
